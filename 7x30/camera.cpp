@@ -687,10 +687,11 @@ char* camera_get_parameters(struct camera_device * device)
         return NULL;
 
     dev = (priv_camera_device_t*) device;
-
+    LOGD("camera_get_parameters dev->cameraid: %d", dev->cameraid);
     camParams = gCameraHals[dev->cameraid]->getParameters();
-
+    
     params_str8 = camParams.flatten();
+    LOGD("camera_get_parameters: %s", params_str8.string());
     params = (char*) malloc(sizeof(char) * (params_str8.length()+1));
     strcpy(params, params_str8.string());
 
@@ -711,7 +712,7 @@ int camera_send_command(struct camera_device * device,
     int rv = -EINVAL;
     priv_camera_device_t* dev = NULL;
 
-    LOGD("%s: cmd %i", __FUNCTION__, cmd);
+    LOGD("camera_send_command: %s: %d %d %d", __FUNCTION__, cmd, arg1, arg2);
 
     if(!device)
         return rv;
@@ -719,6 +720,7 @@ int camera_send_command(struct camera_device * device,
     dev = (priv_camera_device_t*) device;
 
     rv = gCameraHals[dev->cameraid]->sendCommand(cmd, arg1, arg2);
+    LOGD("camera_send_command: %d", rv);
     return rv;
 }
 
@@ -844,7 +846,7 @@ int camera_device_open(const hw_module_t* module, const char* name,
             goto fail;
         }
 
-#ifdef BOARD_HAVE_HTC_FFC
+/*#ifdef BOARD_HAVE_HTC_FFC
 #define HTC_SWITCH_CAMERA_FILE_PATH "/sys/android_camera2/htcwc"
 
         char htc_buffer[16];
@@ -862,14 +864,14 @@ int camera_device_open(const hw_module_t* module, const char* name,
 #if defined(BOARD_USE_REVERSE_FFC)
         
         if (cameraId == 1) {
-            CameraParameters camParams;
+            CameraParameters camParams; */
             /* Change default parameters for the front camera */
-            camParams = gCameraHals[dev->cameraid]->getParameters();
+/*            camParams = gCameraHals[dev->cameraid]->getParameters();
             camParams.set("front-camera-mode", "reverse"); // default is "mirror"
             gCameraHals[dev->cameraid]->setParameters(camParams);
         }
         
-#endif
+#endif */
 
         memset(priv_camera_device, 0, sizeof(*priv_camera_device));
         memset(camera_ops, 0, sizeof(*camera_ops));
@@ -911,7 +913,7 @@ int camera_device_open(const hw_module_t* module, const char* name,
         priv_camera_device->cameraid = cameraid;
 
         camera = HAL_openCameraHardware(cameraid);
-
+        LOGD("camera.cpp: opened camera with id: %d", cameraid);
         if(camera == NULL)
         {
             LOGE("Couldn't create instance of CameraHal class");
@@ -952,6 +954,7 @@ int camera_get_camera_info(int camera_id, struct camera_info *info)
     int rv = 0;
 
     CameraInfo cameraInfo;
+    LOGD("camera_get_camera_info trying to get HAL_getCameraInfo with id: %d", camera_id);
     android::HAL_getCameraInfo(camera_id, &cameraInfo);
 
     info->facing = cameraInfo.facing;
